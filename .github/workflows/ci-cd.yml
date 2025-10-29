@@ -1,0 +1,64 @@
+name: CI/CD pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: biblioteca
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install deps
+        run: |
+          pip install -r backend/requirements.txt
+      - name: Run tests with coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/biblioteca
+        run: |
+          pytest backend/tests --maxfail=1 --disable-warnings -q --cov=backend/app --cov-report=xml --cov-report=term
+      - name: Upload coverage to Codecov (optional)
+        if: ${{ always() }}
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+
+  build_and_push:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build docker image
+        run: |
+          docker build -t biblioteca-app:latest backend
+      # Push to registry (Nexus) - requires secrets.NEXUS_URL, NEXUS_USERNAME, NEXUS_PASSWORD
+      - name: Login to Nexus Docker registry
+        run: echo "${{ secrets.NEXUS_PASSWORD }}" | docker login ${{ secrets.NEXUS_URL }} -u "${{ secrets.NEXUS_USERNAME }}" --password-stdin
+      - name: Tag and push
+        run: |
+          docker tag biblioteca-app:latest ${{ secrets.NEXUS_URL }}/library/biblioteca-app:latest
+          docker push ${{ secrets.NEXUS_URL }}/library/biblioteca-app:latest
+
+  deploy:
+    needs: build_and_push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy step (placeholder)
+        run: |
+          echo "En este proyecto simple asumimos despliegue manual o con un runner que haga docker-compose pull && docker-compose up -d"
