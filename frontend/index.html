@@ -1,23 +1,227 @@
 <!doctype html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Biblioteca</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Biblioteca - CRUD Libros</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .genre-checkbox { margin-right: 10px; }
+    .form-section { margin-bottom: 1rem; }
+    .table-fixed { max-height: 400px; overflow: auto; display: block; }
+  </style>
 </head>
 <body class="p-4">
-  <h1>Biblioteca - CRUD Libros</h1>
-  <div id="app">
-    <!-- Aquí pondrás tu UI: radio estado, checkboxes géneros, combobox categorías/autores y tabla -->
-    <p>Página inicial (frontend estático). Implementa UI con Bootstrap y fetch a /books</p>
+  <div class="container">
+    <h1 class="mb-3">Biblioteca — Gestión de Libros</h1>
+
+    <!-- Formulario crear libro -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title">Crear nuevo libro</h5>
+        <form id="bookForm">
+          <div class="row">
+            <div class="col-md-6 form-group mb-2">
+              <label for="titulo" class="form-label">Título</label>
+              <input id="titulo" name="titulo" class="form-control" required />
+            </div>
+            <div class="col-md-6 form-group mb-2">
+              <label for="isbn" class="form-label">ISBN</label>
+              <input id="isbn" name="isbn" class="form-control" required />
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4 form-group mb-2">
+              <label for="authorSelect" class="form-label">Autor (o nuevo)</label>
+              <select id="authorSelect" class="form-select"></select>
+              <input id="author" name="author" class="form-control mt-1" placeholder="Escribe nuevo autor si no está en la lista" />
+            </div>
+
+            <div class="col-md-4 form-group mb-2">
+              <label for="categorySelect" class="form-label">Categoría (o nueva)</label>
+              <select id="categorySelect" class="form-select"></select>
+              <input id="category" name="category" class="form-control mt-1" placeholder="Escribe nueva categoría si no está en la lista" />
+            </div>
+
+            <div class="col-md-4 form-group mb-2">
+              <label class="form-label d-block">Estado</label>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="state" id="stateDisponible" value="Disponible" checked>
+                <label class="form-check-label" for="stateDisponible">Disponible</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="state" id="statePrestado" value="Prestado">
+                <label class="form-check-label" for="statePrestado">Prestado</label>
+              </div>
+              <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="state" id="stateReparacion" value="En reparación">
+                <label class="form-check-label" for="stateReparacion">En reparación</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="form-label d-block">Géneros literarios</label>
+            <div id="genresContainer" class="d-flex flex-wrap">
+              <!-- checkboxes -->
+            </div>
+            <small class="text-muted">Selecciona uno o más géneros.</small>
+          </div>
+
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Crear libro</button>
+            <button id="clearBtn" type="button" class="btn btn-secondary">Limpiar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Tabla de libros -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Lista de libros</h5>
+        <div class="mb-3">
+          <input id="searchInput" class="form-control" placeholder="Buscar por título, autor o ISBN" />
+        </div>
+        <div class="table-responsive table-fixed">
+          <table class="table table-striped" id="booksTable">
+            <thead>
+              <tr>
+                <th>Título</th>
+                <th>Autor</th>
+                <th>ISBN</th>
+                <th>Categoría</th>
+                <th>Estado</th>
+                <th>Géneros</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
+
   <script>
-    async function loadBooks(){
-      const res = await fetch('/books');
-      const books = await res.json();
-      console.log(books);
+    // Configuración: endpoint base (ajusta si tu backend corre en otra ruta/puerto)
+    const API_BASE = window.location.origin.replace(/:\d+$/, ':8000'); // si sirves frontend por filesystem, asumimos backend en :8000
+
+    const defaultGenres = ["Aventura","Ficción","No Ficción","Romance","Ciencia","Historia","Infantil"];
+    const genresContainer = document.getElementById('genresContainer');
+    const authorSelect = document.getElementById('authorSelect');
+    const categorySelect = document.getElementById('categorySelect');
+    const booksTableBody = document.querySelector('#booksTable tbody');
+    const bookForm = document.getElementById('bookForm');
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function renderGenres() {
+      genresContainer.innerHTML = '';
+      for (const g of defaultGenres) {
+        const id = `genre_${g.replace(/\s+/g,'_')}`;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'form-check genre-checkbox';
+        wrapper.innerHTML = `
+          <input class="form-check-input" type="checkbox" value="${g}" id="${id}">
+          <label class="form-check-label" for="${id}">${g}</label>
+        `;
+        genresContainer.appendChild(wrapper);
+      }
     }
-    loadBooks();
+
+    function setSelectOptions(selectEl, items) {
+      selectEl.innerHTML = '<option value="">-- Seleccionar --</option>';
+      const unique = [...new Set(items)].sort();
+      for (const it of unique) {
+        const opt = document.createElement('option');
+        opt.value = it;
+        opt.textContent = it;
+        selectEl.appendChild(opt);
+      }
+    }
+
+    async function fetchBooks() {
+      try {
+        const res = await fetch(`${API_BASE}/books`);
+        if (!res.ok) throw new Error('Error al obtener libros');
+        const data = await res.json();
+        return data;
+      } catch (err) {
+        console.error(err);
+        return [];
+      }
+    }
+
+    async function loadAndRenderBooks() {
+      const books = await fetchBooks();
+      // llenar comboboxes por autor y categoría usando los libros existentes
+      setSelectOptions(authorSelect, books.map(b => b.author || ''));
+      setSelectOptions(categorySelect, books.map(b => b.category || ''));
+
+      // render tabla
+      booksTableBody.innerHTML = '';
+      const q = searchInput.value.trim().toLowerCase();
+      for (const b of books) {
+        const matches = !q || [b.titulo, b.author, b.isbn].join(' ').toLowerCase().includes(q);
+        if (!matches) continue;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${b.titulo}</td>
+          <td>${b.author}</td>
+          <td>${b.isbn}</td>
+          <td>${b.category ?? ''}</td>
+          <td>${b.state ?? ''}</td>
+          <td>${(b.genres ?? []).join(', ')}</td>
+        `;
+        booksTableBody.appendChild(tr);
+      }
+    }
+
+    function getSelectedGenres() {
+      return Array.from(genresContainer.querySelectorAll('input[type="checkbox"]:checked')).map(i => i.value);
+    }
+
+    bookForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const titulo = document.getElementById('titulo').value.trim();
+      const isbn = document.getElementById('isbn').value.trim();
+      const authorInput = document.getElementById('author').value.trim();
+      const categoryInput = document.getElementById('category').value.trim();
+      const author = authorInput || authorSelect.value || 'Autor desconocido';
+      const category = categoryInput || categorySelect.value || '';
+      const state = document.querySelector('input[name="state"]:checked').value;
+      const genres = getSelectedGenres();
+
+      const payload = { titulo, isbn, author, category, state, genres };
+
+      try {
+        const res = await fetch(`${API_BASE}/books`, {
+          method: 'POST',
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert('Error al crear libro: ' + (data.detail || JSON.stringify(data)));
+          return;
+        }
+        // refrescar lista
+        await loadAndRenderBooks();
+        bookForm.reset();
+      } catch (err) {
+        console.error(err);
+        alert('Error al conectar con el backend');
+      }
+    });
+
+    clearBtn.addEventListener('click', () => bookForm.reset());
+    searchInput.addEventListener('input', loadAndRenderBooks);
+
+    // inicializar UI
+    renderGenres();
+    loadAndRenderBooks();
   </script>
 </body>
 </html>
