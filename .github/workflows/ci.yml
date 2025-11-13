@@ -1,0 +1,106 @@
+name: Biblioteca DevOps CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) Traer el código
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2) Preparar Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3) Instalar dependencias Python
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install black isort flake8 mypy pytest pytest-cov uvicorn build
+
+      # 4) Análisis de calidad de código
+      - name: Run quality checks (black, isort, flake8, mypy)
+        run: |
+          black --check app tests
+          isort --check-only app tests
+          flake8 app tests
+          mypy app --ignore-missing-imports
+
+      # 5) Tests con cobertura
+      - name: Run tests with coverage
+        run: |
+          pytest --cov=app --cov-fail-under=80 --cov-report=xml
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      # 6) Levantar FastAPI en background (para Newman y JMeter)
+      - name: Start FastAPI server
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+
+      # 7) Instalar Node y Newman
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Newman
+        run: npm install -g newman
+
+      # 8) Ejecutar colección Postman con Newman
+      - name: Run Postman collection with Newman
+        run: newman run postman/biblioteca.postman_collection.json
+
+      # 9) Instalar JMeter
+      - name: Install JMeter
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jmeter
+
+      # 10) Ejecutar prueba de rendimiento con JMeter
+      - name: Run JMeter load test
+        run: |
+          mkdir -p jmeter/report
+          jmeter -n -t jmeter/api_books.jmx -l jmeter/results.jtl -e -o jmeter/report
+
+      - name: Upload JMeter report
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-report
+          path: jmeter/report
+
+      # 11) Crear artefacto ZIP versionado
+      - name: Create ZIP artifact with git archive
+        run: |
+          git archive --format zip --output biblioteca-devops_${{ github.run_number }}.zip HEAD
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: biblioteca-devops-zip
+          path: biblioteca-devops_*.zip
+
+      # 12) Construir wheel del proyecto
+      - name: Build wheel
+        run: |
+          python -m build
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-artifact
+          path: dist/*.whl

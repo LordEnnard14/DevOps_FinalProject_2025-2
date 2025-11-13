@@ -1,11 +1,23 @@
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
-name = "biblioteca"
-version = "0.1.0"
-dependencies = []
+name = "biblioteca-devops"
+version = "1.0.0"
+description = "Sistema de gestión de biblioteca para el curso de DevOps"
+authors = [
+    { name="Lord Ennard"}
+]
+readme = "README.md"
+requires-python = ">=3.10"
 
-[tool.setuptools]
-packages = ["app"]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "sqlalchemy",
+    "alembic",
+    "jinja2",
+    "python-multipart",
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+where = ["."] 
+include = ["app*"]

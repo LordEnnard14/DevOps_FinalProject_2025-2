@@ -1,0 +1,19 @@
+# Artefactos de empaquetado
+dist/
+build/
+*.egg-info/
+
+# Cachés de Python
+__pycache__/
+*.pyc
+
+# Entorno virtual local
+.venv/
+
+# Pytest
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Otros (opcional)
+jmeter/report/
