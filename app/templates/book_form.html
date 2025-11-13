@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Editar' if book else 'Nuevo' }} libro{% endblock %}
+{% block content %}
+<h2>{{ 'Editar' if book else 'Nuevo' }} libro</h2>
+
+{% if error %}<div class="alert">{{ error }}</div>{% endif %}
+
+<form method="post" class="form">
+  <label>Título
+    <input name="title" value="{{ book.title if book else '' }}" required maxlength="200">
+  </label>
+  <label>Autor
+    <input name="author" value="{{ book.author if book else '' }}" required maxlength="100">
+  </label>
+  <label>ISBN
+    <input name="isbn" value="{{ book.isbn if book else '' }}" required maxlength="50">
+  </label>
+  <label>Categoría
+    <select name="category">
+      {% set cats = ['Software','Ciencia','Historia','Arte','Otro'] %}
+      {% for c in cats %}
+        <option value="{{ c }}" {% if book and book.category==c %}selected{% endif %}>{{ c }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <fieldset>
+    <legend>Estado</legend>
+    <label><input type="radio" name="status" value="AVAILABLE" {% if not book or book.status=='AVAILABLE' %}checked{% endif %}> Disponible</label>
+    <label><input type="radio" name="status" value="LOANED" {% if book and book.status=='LOANED' %}checked{% endif %}> Prestado</label>
+  </fieldset>
+  <button type="submit">Guardar</button>
+  <a class="btn" href="/books">Cancelar</a>
+</form>
+{% endblock %}

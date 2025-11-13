@@ -1,0 +1,11 @@
+body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:#f5f6f8;color:#222}
+.header,.footer{background:#111;color:#fff;padding:10px 16px}
+.container{padding:16px}
+nav a{color:#9fe3ff;margin-right:8px;text-decoration:none}
+.table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff}
+.table th,.table td{border:1px solid #ddd;padding:8px;text-align:left}
+.form{display:grid;gap:10px;max-width:420px}
+.form input,.form select{width:100%;padding:8px}
+.btn{display:inline-block;background:#0c8ce9;color:#fff;padding:6px 10px;border-radius:6px;text-decoration:none}
+.alert{background:#ffe4e4;color:#900;padding:8px;border-radius:6px;margin:10px 0}
+.actions a, .actions button{margin-right:6px}

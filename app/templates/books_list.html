@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Libros{% endblock %}
+{% block content %}
+<h2>Libros</h2>
+<a class="btn" href="/books/new">➕ Nuevo libro</a>
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th><th>Título</th><th>Autor</th><th>ISBN</th><th>Categoría</th><th>Estado</th><th>Acciones</th>
+    </tr>
+  </thead>
+  <tbody>
+  {% for b in books %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.title }}</td>
+      <td>{{ b.author }}</td>
+      <td>{{ b.isbn }}</td>
+      <td>{{ b.category or "-" }}</td>
+      <td>{{ b.status }}</td>
+      <td class="actions">
+        <a href="/books/{{ b.id }}/edit">✏️ Editar</a>
+        <form method="post" action="/books/{{ b.id }}/delete" style="display:inline" onsubmit="return confirm('¿Eliminar?')">
+          <button type="submit">🗑️ Eliminar</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="7">Sin registros.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

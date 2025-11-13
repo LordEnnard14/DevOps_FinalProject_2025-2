@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <title>{% block title %}Biblioteca{% endblock %}</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+</head>
+<body>
+<header class="header">
+  <h1>🗣️ Biblioteca Ulima 📚</h1>
+  <nav>
+    {% if user %}
+      <span>Hola, {{ user }}</span> |
+      <a href="/books">Libros</a> |
+      <a href="/logout">Salir</a>
+    {% else %}
+      <a href="/login">Login</a>
+    {% endif %}
+  </nav>
+</header>
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+<footer class="footer">📖 Hecho por lectores para lectores 😎</footer>
+</body>
+</html>

@@ -1,0 +1,136 @@
+{
+  "info": {
+    "name": "Biblioteca API",
+    "_postman_id": "demo-local",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('body contiene ok', function () {",
+              "  pm.expect(pm.response.text()).to.include('ok');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/health",
+          "protocol": "http",
+          "host": ["127.0.0.1"],
+          "port": "8000",
+          "path": ["api", "health"]
+        }
+      }
+    },
+    {
+      "name": "Create Book",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.variables.set('rnd', Date.now().toString());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 201', function () {",
+              "  pm.response.to.have.status(201);",
+              "});",
+              "",
+              "let json = {};",
+              "try { json = pm.response.json(); } catch(e) {}",
+              "pm.test('body es JSON con id', function () {",
+              "  pm.expect(json).to.be.an('object');",
+              "  pm.expect(json).to.have.property('id');",
+              "});",
+              "",
+              "if (json.id) { pm.environment.set('last_book_id', json.id); }"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"title\":\"API Book\",\"author\":\"Tester\",\"isbn\":\"PM-{{rnd}}\",\"category\":\"Software\",\"status\":\"AVAILABLE\"}"
+        },
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/books",
+          "protocol": "http",
+          "host": ["127.0.0.1"],
+          "port": "8000",
+          "path": ["api", "books"]
+        }
+      }
+    },
+    {
+      "name": "List Books",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status 200', function () {",
+              "  pm.response.to.have.status(200);",
+              "});",
+              "",
+              "let arr = [];",
+              "try { arr = pm.response.json(); } catch(e) {}",
+              "pm.test('respuesta es arreglo', function () {",
+              "  pm.expect(arr).to.be.an('array');",
+              "});",
+              "",
+              "pm.test('hay al menos 1 libro', function () {",
+              "  pm.expect(arr.length).to.be.at.least(1);",
+              "});",
+              "",
+              "if (arr.length) {",
+              "  pm.test('primer libro tiene campos básicos', function () {",
+              "    pm.expect(arr[0]).to.have.property('id');",
+              "    pm.expect(arr[0]).to.have.property('title');",
+              "    pm.expect(arr[0]).to.have.property('author');",
+              "  });",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://127.0.0.1:8000/api/books",
+          "protocol": "http",
+          "host": ["127.0.0.1"],
+          "port": "8000",
+          "path": ["api", "books"]
+        }
+      }
+    }
+  ]
+}
