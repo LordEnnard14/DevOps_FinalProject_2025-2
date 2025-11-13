@@ -1,4 +1,4 @@
-name: Biblioteca DevOps CI
+name: Biblioteca DevOps
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   ci:
-    name: Flujo CI
+    name: Pipeline Completo DevOps
     runs-on: ubuntu-latest
 
     steps:
