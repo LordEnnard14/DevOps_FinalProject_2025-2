@@ -6,55 +6,96 @@ on:
   pull_request:
 
 jobs:
-  ci:
-    name: Pipeline Completo DevOps
+
+  # ---------------------------
+  # JOB 1: Análisis de calidad
+  # ---------------------------
+  quality:
+    name: Calidad de Código
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Traer el código
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      # 2) Preparar Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # 3) Instalar dependencias Python
-      - name: Install Python dependencies
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          pip install black isort flake8 mypy pytest pytest-cov uvicorn build
+          pip install black isort flake8 mypy
 
-      # 4) Análisis de calidad de código
-      - name: Run quality checks (black, isort, flake8, mypy)
+      - name: Run quality checks
         run: |
           black --check app tests
           isort --check-only app tests
           flake8 app tests
           mypy app --ignore-missing-imports
 
-      # 5) Tests con cobertura
+  # ---------------------------
+  # JOB 2: Tests unitarios
+  # ---------------------------
+  tests:
+    name: Pruebas Unitarias + Cobertura
+    needs: quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov uvicorn
+
       - name: Run tests with coverage
         run: |
           pytest --cov=app --cov-fail-under=80 --cov-report=xml
 
-      - name: Upload coverage report
+      - name: Upload coverage
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage.xml
 
-      # 6) Levantar FastAPI en background (para Newman y JMeter)
-      - name: Start FastAPI server
+  # ---------------------------
+  # JOB 3: Pruebas API REST
+  # ---------------------------
+  api_tests:
+    name: Pruebas de API (Postman + Newman)
+    needs: tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install uvicorn
+
+      - name: Start FastAPI
         run: |
           uvicorn app.main:app --host 0.0.0.0 --port 8000 &
           sleep 5
 
-      # 7) Instalar Node y Newman
-      - name: Set up Node.js
+      - name: Install Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
@@ -62,18 +103,42 @@ jobs:
       - name: Install Newman
         run: npm install -g newman
 
-      # 8) Ejecutar colección Postman con Newman
-      - name: Run Postman collection with Newman
+      - name: Run Postman collection
         run: newman run postman/biblioteca.postman_collection.json
 
-      # 9) Instalar JMeter
+  # ---------------------------
+  # JOB 4: Pruebas de rendimiento (JMeter)
+  # ---------------------------
+  performance:
+    name: Pruebas de Rendimiento (JMeter)
+    needs: api_tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install uvicorn
+
+      - name: Start FastAPI
+        run: |
+          uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+          sleep 5
+
       - name: Install JMeter
         run: |
           sudo apt-get update
           sudo apt-get install -y jmeter
 
-      # 10) Ejecutar prueba de rendimiento con JMeter
-      - name: Run JMeter load test
+      - name: Run JMeter test
         run: |
           mkdir -p jmeter/report
           jmeter -n -t jmeter/api_books.jmx -l jmeter/results.jtl -e -o jmeter/report
@@ -84,24 +149,41 @@ jobs:
           name: jmeter-report
           path: jmeter/report
 
-      # 11) Crear artefacto ZIP versionado
-      - name: Create ZIP artifact with git archive
-        run: |
-          git archive --format zip --output biblioteca-devops_${{ github.run_number }}.zip HEAD
+  # ---------------------------
+  # JOB 5: Construcción de artefactos
+  # ---------------------------
+  artifacts:
+    name: Construcción y Versionado de Artefactos
+    needs: performance
+    runs-on: ubuntu-latest
 
-      - name: Upload ZIP artifact
-        uses: actions/upload-artifact@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          name: biblioteca-devops-zip
-          path: biblioteca-devops_*.zip
+          python-version: "3.11"
 
-      # 12) Construir wheel del proyecto
+      - name: Install builder
+        run: pip install build
+
       - name: Build wheel
-        run: |
-          python -m build
+        run: python -m build
 
-      - name: Upload wheel artifact
+      - name: Upload wheel
         uses: actions/upload-artifact@v4
         with:
           name: wheel-artifact
           path: dist/*.whl
+
+      - name: Create ZIP
+        run: |
+          git archive --format zip --output biblioteca-devops_${{ github.run_number }}.zip HEAD
+
+      - name: Upload ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: biblioteca-devops-zip
+          path: biblioteca-devops_*.zip
