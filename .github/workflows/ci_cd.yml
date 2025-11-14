@@ -218,6 +218,8 @@ jobs:
           sleep 5
 
       - name: Run Selenium tests
+        env:
+          PYTEST_ADDOPTS: ""
         run: |
           pytest tests/functional --maxfail=1 --disable-warnings -q
 
