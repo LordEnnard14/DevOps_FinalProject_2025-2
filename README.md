@@ -228,6 +228,39 @@ subida de artefactos
 
 Resultados disponibles en GitHub → Actions → Artifacts.
 
+🧪 Pruebas funcionales con Selenium (Frontend)
+
+El proyecto incluye pruebas funcionales automatizadas usando Selenium + WebDriver Manager, las cuales validan el flujo de inicio de sesión desde el navegador.
+
+🔥 Objetivo: verificar que el usuario pueda iniciar sesión y acceder al módulo de libros.
+
+Para ejecutarlas:
+
+uvicorn app.main:app --reload
+pytest tests/functional
+
+
+En GitHub Actions se ejecutan en un job independiente:
+
+selenium-tests
+
+🚀 Simulación de Despliegue Automático
+
+El proyecto incluye un job adicional que representa un despliegue automatizado en un entorno limpio, ejecutando la aplicación en el puerto 9000 y realizando un smoke test con curl.
+
+Job correspondiente:
+
+deploy
+
+
+Esto demuestra un proceso CI/CD completo con:
+
+Integración continua
+
+Entrega continua
+
+Despliegue automatizado simulado
+
 🟢 Makefile
 Atajos útiles:
 
