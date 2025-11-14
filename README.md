@@ -1,303 +1,220 @@
-📚 Biblioteca DevOps — Proyecto Final
+# 📚 Biblioteca DevOps  
+**Proyecto Final – DevOps 2025-2**
 
-Sistema completo de gestión de biblioteca desarrollado como parte del Proyecto Final del curso de DevOps.
-Incluye backend en FastAPI, frontend con Jinja2, versionado de base de datos, pruebas automatizadas, pipeline CI/CD multi-job, pruebas de rendimiento, artefactos versionados y análisis completo de calidad de código.
+Este proyecto implementa un **sistema de gestión de biblioteca** con autenticación, CRUD completo de libros y una **pipeline DevOps avanzada**, incluyendo:
 
-🚀 Tecnologías utilizadas
+- Backend con FastAPI  
+- Frontend con Jinja2  
+- Base de datos SQLite + Alembic (migraciones)  
+- Pruebas unitarias, de API, funcionales y de rendimiento  
+- Análisis de calidad de código  
+- Cobertura > 80%  
+- Generación de artefactos (ZIP + Wheel)  
+- Pipeline CI/CD con GitHub Actions  
+- Deploy simulado automático  
 
-| Capa                   | Herramienta / Tecnología              |
-| ---------------------- | ------------------------------------- |
-| Backend                | FastAPI                               |
-| Base de datos          | SQLite                                |
-| ORM                    | SQLAlchemy                            |
-| Migraciones            | Alembic                               |
-| Frontend               | Jinja2                                |
-| Pruebas unitarias      | Pytest                                |
-| Cobertura              | pytest-cov                            |
-| Calidad de código      | black, isort, flake8, mypy            |
-| Pruebas API REST       | Postman + Newman                      |
-| Pruebas de rendimiento | JMeter                                |
-| CI/CD                  | GitHub Actions (multi-job)            |
-| Artefactos             | git archive ZIP + Python wheel (.whl) |
+---
 
-📁 Estructura principal del proyecto
+## 🧩 1. Arquitectura del Proyecto
 
 biblioteca-devops/
 ├── app/
-│   ├── main.py
-│   ├── auth.py
-│   ├── crud.py
-│   ├── db.py
-│   ├── models.py
-│   ├── schemas.py
-│   └── __init__.py
-├── templates/
-│   ├── login.html
-│   ├── list_books.html
-│   ├── new_book.html
-│   ├── edit_book.html
-│   └── base.html
-├── alembic/
-│   ├── versions/
-│   └── env.py
+│ ├── main.py # FastAPI + rutas API + vistas Jinja
+│ ├── auth.py # Autenticación básica
+│ ├── crud.py # Lógica de acceso a datos
+│ ├── db.py # SQLAlchemy + Alembic
+│ ├── models.py # ORM models
+│ └── schemas.py # Pydantic schemas
+│
+├── templates/ # Frontend Jinja2
+│ ├── login.html
+│ ├── books_list.html
+│ ├── books_edit.html
+│ └── books_new.html
+│
 ├── tests/
-│   ├── unit/
-│   ├── ui/
-│   └── api/
-├── postman/
-│   └── biblioteca.postman_collection.json
+│ ├── unit/ # Pruebas unitarias
+│ ├── api/ # Pruebas API de FastAPI
+│ ├── ui/ # Pruebas de vistas Jinja
+│ └── functional/ # Selenium (pruebas funcionales)
+│
 ├── jmeter/
-│   └── api_books.jmx
-├── dist/ (se genera en el pipeline)
-├── Makefile
-├── README.md
+│ └── api_books.jmx # Prueba de rendimiento
+│
+├── postman/
+│ └── biblioteca.postman_collection.json
+│
+├── alembic/ # Migraciones de BD
+│ ├── versions/
+│ └── env.py
+│
+├── dist/ # Artefactos .whl
+├── library.db # Base de datos SQLite
 ├── pyproject.toml
-└── requirements.txt
+├── requirements.txt
+└── README.md
 
-🧱 Backend – FastAPI
+yaml
+Copy code
 
-El backend implementa:
+---
 
-CRUD completo para libros
+## 🛠️ 2. Tecnologías Utilizadas
 
-Modelo Book (título, autor, ISBN, categoría, estado, timestamps)
+| Categoría | Herramienta |
+|----------|-------------|
+| Backend | FastAPI |
+| Frontend | Jinja2 |
+| Base de Datos | SQLite |
+| ORM | SQLAlchemy |
+| Migraciones | Alembic |
+| Calidad | Black, Isort, Flake8, Mypy |
+| Pruebas Unitarias | Pytest + Coverage |
+| Pruebas API | Postman + Newman |
+| Pruebas Funcionales | Selenium |
+| Pruebas de Rendimiento | Apache JMeter |
+| CI/CD | GitHub Actions |
+| Artefactos | Wheel + Git Archive |
 
-Autenticación sencilla con cookies (login + logout)
+---
 
-Endpoints REST para integrarse con Postman/Newman y JMeter
+## 🚀 3. Ejecución local
 
-Sistema MVC simple con templates Jinja
+### 3.1 Activar entorno virtual
 
-Para levantarlo:
+```bash
+python -m venv .venv
+source .venv/bin/activate   # Linux/Mac
+.\.venv\Scripts\activate    # Windows
+3.2 Instalar dependencias
+bash
+Copy code
+pip install -r requirements.txt
+3.3 Ejecutar la app
+bash
+Copy code
 uvicorn app.main:app --reload
+La app estará disponible en:
 
+arduino
+Copy code
+http://127.0.0.1:8000/login
+Usuario: admin
+Contraseña: admin
 
-🎨 Frontend – Jinja2
-
-Cuenta con:
-
-Página de login
-
-Panel principal (lista de libros)
-
-Crear libro
-
-Editar libro
-
-Eliminar libro
-
-Plantilla base con navegación
-
-Validación simple de formularios
-
-🗄️ Versionado de Base de Datos – Alembic
-
-Se usó Alembic + SQLAlchemy para versionar el esquema del proyecto.
-
-Comandos utilizados:
+🗄️ 4. Migraciones con Alembic
+Inicializar Alembic (ya hecho)
+bash
+Copy code
 alembic init alembic
+Crear migración
+bash
+Copy code
 alembic revision -m "create books table" --autogenerate
+Aplicar migración
+bash
+Copy code
 alembic upgrade head
-
-Archivo de BD:
-
-library.db
-
-Justificación:
-
-SQLite no requiere un servidor externo ni despliegue remoto → migraciones locales y versionamiento vía alembic/versions/*.
-
-🧪 Pruebas Unitarias – Pytest
-
-Se implementaron pruebas para:
-
-CRUD de libros
-
-API REST
-
-Templates Jinja
-
-Autenticación
-
-Validaciones
-
-Base de datos (uso de DB temporal)
-
-Ejecutar pruebas:
-
-pytest
-Con cobertura (mínimo 80%):
+🧪 5. Pruebas Unitarias + Cobertura
+Ejecutar:
 
 bash
 Copy code
-pytest --cov=app --cov-report=html
-Cobertura alcanzada: ~93%
+pytest --cov=app --cov-report=term-missing
+Se exige al menos 80%.
+Este proyecto alcanza 93%.
 
-🚦 Pruebas API – Postman + Newman
-La colección Postman fue automatizada con Newman:
+🧪 6. Pruebas Funcionales (Selenium)
+Archivo:
+
+bash
+Copy code
+tests/functional/test_login_selenium.py
+Ejecutar:
+
+bash
+Copy code
+uvicorn app.main:app --reload
+pytest tests/functional
+Selenium verifica:
+
+✔ El login
+✔ La navegación
+✔ Corre en navegador real
+
+También se ejecuta automáticamente en GitHub Actions.
+
+🌐 7. Pruebas API REST (Postman + Newman)
+Ejecutar:
 
 bash
 Copy code
 newman run postman/biblioteca.postman_collection.json
-Incluye:
+Incluye assertions:
 
-GET /api/health
+status code
 
-POST /api/books
+JSON válido
 
-GET /api/books
+validación de ID
 
-Validaciones de estado HTTP
+validación de arreglo
 
-Assertions sobre la respuesta JSON
-
-⚡ Pruebas de Rendimiento – JMeter
-Archivo del plan de prueba:
-
-bash
-Copy code
-jmeter/api_books.jmx
-Ejecución automática:
+⚡ 8. Pruebas de rendimiento (JMeter)
+Ejecutar local:
 
 bash
 Copy code
 jmeter -n -t jmeter/api_books.jmx -l jmeter/results.jtl -e -o jmeter/report
-Se mide:
+El reporte HTML se genera en:
 
-throughput
-
-avg response time
-
-errores
-
-gráficos varias métricas
-
-🧹 Calidad de Código
-Se incluye pipeline de análisis estático:
-
-black
-
-isort
-
-flake8
-
-mypy
-
-Se ejecuta automáticamente en el primer job del CI/CD.
-
-📦 Versionado de Artefactos
-ZIP versionado:
 bash
 Copy code
-git archive --format zip --output biblioteca-devops_1.0.0.zip HEAD
-Wheel (.whl)
-Generado con:
-
+jmeter/report/
+📦 9. Artefactos
+9.1 Wheel (Python Package)
 bash
 Copy code
 python -m build
-Artefactos generados automáticamente en GitHub Actions.
+Generado en:
 
-🔄 Pipeline CI/CD (GitHub Actions – Multi Job)
-El pipeline tiene 5 jobs secuenciales:
-
-css
 Copy code
-[ Calidad de Código ]
-        ↓
-[ Pruebas Unitarias + Cobertura ]
-        ↓
-[ Pruebas API (Newman) ]
-        ↓
-[ Pruebas de Rendimiento (JMeter) ]
-        ↓
-[ Construcción y Versionado de Artefactos ]
-Cada push a main ejecuta:
-
-análisis estático
-
-pruebas con cobertura
-
-ejecución API REST
-
-stress test con JMeter
-
-creación de ZIP + wheel
-
-subida de artefactos
-
-Resultados disponibles en GitHub → Actions → Artifacts.
-
-🧪 Pruebas funcionales con Selenium (Frontend)
-
-El proyecto incluye pruebas funcionales automatizadas usando Selenium + WebDriver Manager, las cuales validan el flujo de inicio de sesión desde el navegador.
-
-🔥 Objetivo: verificar que el usuario pueda iniciar sesión y acceder al módulo de libros.
-
-Para ejecutarlas:
-
-uvicorn app.main:app --reload
-pytest tests/functional
-
-
-En GitHub Actions se ejecutan en un job independiente:
-
-selenium-tests
-
-🚀 Simulación de Despliegue Automático
-
-El proyecto incluye un job adicional que representa un despliegue automatizado en un entorno limpio, ejecutando la aplicación en el puerto 9000 y realizando un smoke test con curl.
-
-Job correspondiente:
-
-deploy
-
-
-Esto demuestra un proceso CI/CD completo con:
-
-Integración continua
-
-Entrega continua
-
-Despliegue automatizado simulado
-
-🟢 Makefile
-Atajos útiles:
-
-makefile
+dist/*.whl
+9.2 ZIP versionado
+bash
 Copy code
-run:
-	uvicorn app.main:app --reload
+git archive --format zip --output biblioteca-devops_1.0.0.zip HEAD
+☁️ 10. CI/CD con GitHub Actions (7 JOBS)
+La pipeline completa incluye:
 
-test:
-	pytest
+Calidad de código
 
-coverage:
-	pytest --cov=app
+Pruebas unitarias + cobertura
 
-api-tests:
-	newman run postman/biblioteca.postman_collection.json
+Pruebas de API (Newman)
 
-performance:
-	jmeter -n -t jmeter/api_books.jmx -l jmeter/results.jtl -e -o jmeter/report
+Pruebas de rendimiento (JMeter)
 
-build-wheel:
-	python -m build
+Construcción de artefactos (wheel + zip)
 
-zip:
-	git archive --format zip --output biblioteca-devops.zip HEAD
-🧾 Conclusiones
-Este proyecto implementa un pipeline DevOps completo:
+Pruebas funcionales (Selenium)
 
-✔ Backend + Frontend funcional
-✔ Versionado del esquema de base de datos
-✔ Tests automatizados (unitarios y funcionales)
-✔ Cobertura > 80%
-✔ Análisis estático de calidad
-✔ Validación API REST
-✔ Pruebas de rendimiento
-✔ Artefactos versionados (ZIP + wheel)
-✔ CI/CD robusto con 5 jobs independientes
+Deploy simulado automático
 
-Autor: Lord Ennard
-Proyecto: DevOps (Automatización CI/CD)
+Diagrama:
+
+mathematica
+Copy code
+Quality → Tests → API Tests → Performance → Artifacts → Selenium → Deploy
+Cada etapa sube sus reportes como artefactos.
+
+🚀 11. Simulación de Despliegue
+En el job final del pipeline, se realiza:
+
+instalación limpia
+
+ejecución automática de FastAPI
+
+smoke test con curl
+
+Se simula un entorno productivo en el puerto 9000.
