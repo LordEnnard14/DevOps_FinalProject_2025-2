@@ -221,7 +221,7 @@ jobs:
         env:
           PYTEST_ADDOPTS: ""
         run: |
-          pytest -p no:cov tests/functional --maxfail=1 --disable-warnings -q  
+          pytest -o addopts="" tests/functional --maxfail=1 --disable-warnings -q  
 
   # ---------------------------
   # JOB 7: Deploy simulado
