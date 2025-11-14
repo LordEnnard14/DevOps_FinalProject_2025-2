@@ -7,9 +7,9 @@ on:
 
 jobs:
 
-  # ---------------------------
-  # JOB 1: Análisis de calidad
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CI 1: Calidad de Código
+  # ---------------------------------------------------------------------
   quality:
     name: Calidad de Código
     runs-on: ubuntu-latest
@@ -35,9 +35,9 @@ jobs:
           flake8 app tests
           mypy app --ignore-missing-imports
 
-  # ---------------------------
-  # JOB 2: Tests unitarios
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CI 2: Pruebas Unitarias + Cobertura
+  # ---------------------------------------------------------------------
   tests:
     name: Pruebas Unitarias + Cobertura
     needs: quality
@@ -68,9 +68,9 @@ jobs:
           name: coverage-report
           path: coverage.xml
 
-  # ---------------------------
-  # JOB 3: Pruebas API REST
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CI 3: Pruebas API REST (Postman + Newman)
+  # ---------------------------------------------------------------------
   api_tests:
     name: Pruebas de API (Postman + Newman)
     needs: tests
@@ -106,9 +106,9 @@ jobs:
       - name: Run Postman collection
         run: newman run postman/biblioteca.postman_collection.json
 
-  # ---------------------------
-  # JOB 4: Pruebas de rendimiento (JMeter)
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CD 4: Pruebas de Rendimiento (JMeter)
+  # ---------------------------------------------------------------------
   performance:
     name: Pruebas de Rendimiento (JMeter)
     needs: api_tests
@@ -149,9 +149,9 @@ jobs:
           name: jmeter-report
           path: jmeter/report
 
-  # ---------------------------
-  # JOB 5: Construcción de artefactos
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CD 5: Construcción de Artefactos
+  # ---------------------------------------------------------------------
   artifacts:
     name: Construcción y Versionado de Artefactos
     needs: performance
@@ -188,10 +188,9 @@ jobs:
           name: biblioteca-devops-zip
           path: biblioteca-devops_*.zip
 
-
-  # ---------------------------
-  # JOB 6: Pruebas funcionales (Selenium)
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CD 6: Pruebas Funcionales (Selenium)
+  # ---------------------------------------------------------------------
   selenium_tests:
     name: Pruebas Funcionales (Selenium)
     needs: artifacts
@@ -223,9 +222,9 @@ jobs:
         run: |
           pytest -o addopts="" tests/functional --maxfail=1 --disable-warnings -q  
 
-  # ---------------------------
-  # JOB 7: Deploy simulado
-  # ---------------------------
+  # ---------------------------------------------------------------------
+  # CD 7: Despliegue Simulado
+  # ---------------------------------------------------------------------
   deploy:
     name: Simulación de Despliegue
     needs: selenium_tests
